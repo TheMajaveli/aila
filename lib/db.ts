@@ -5,7 +5,12 @@ import type { Message, Memory, Conversation, Quiz } from './db.types';
 const getSupabaseClient = () => {
   if (typeof window === 'undefined') {
     // Server-side: use service role client
-    return createServerClient();
+    try {
+      return createServerClient();
+    } catch (error) {
+      console.error('Failed to create Supabase server client:', error);
+      return null;
+    }
   }
   // Client-side: use anon client
   return supabase;
@@ -25,6 +30,9 @@ export function getUserId(): string {
 // Messages
 export async function saveMessage(message: Omit<Message, 'id' | 'created_at'>) {
   const client = getSupabaseClient();
+  if (!client) {
+    throw new Error('Supabase client not available');
+  }
   const { data, error } = await client
     .from('messages')
     .insert({
@@ -67,15 +75,28 @@ export async function saveMemory(memory: Omit<Memory, 'id' | 'created_at'>) {
 }
 
 export async function getMemories(userId: string): Promise<Memory[]> {
-  const client = getSupabaseClient();
-  const { data, error } = await client
-    .from('memories')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    const client = getSupabaseClient();
+    if (!client) {
+      console.warn('Supabase client not available');
+      return [];
+    }
+    const { data, error } = await client
+      .from('memories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data || [];
+    if (error) {
+      console.error('Error fetching memories:', error);
+      // Return empty array instead of throwing to allow API to continue
+      return [];
+    }
+    return data || [];
+  } catch (error) {
+    console.error('Exception in getMemories:', error);
+    return [];
+  }
 }
 
 // Conversations

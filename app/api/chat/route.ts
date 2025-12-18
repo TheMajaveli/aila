@@ -5,7 +5,15 @@ import { getMemories, saveMemory } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const { messages, conversationId, userId } = await req.json();
+    const body = await req.json();
+    const { messages, conversationId, userId } = body;
+    
+    console.log('Chat API called:', { 
+      hasMessages: !!messages, 
+      messageCount: messages?.length,
+      conversationId,
+      userId 
+    });
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), {
@@ -21,8 +29,14 @@ export async function POST(req: Request) {
       });
     }
 
-    // Get user memories for context
-    const memories = await getMemories(userId);
+    // Get user memories for context (with error handling)
+    let memories: any[] = [];
+    try {
+      memories = await getMemories(userId);
+    } catch (memoryError) {
+      console.warn('Failed to load memories, continuing without context:', memoryError);
+      // Continue without memories if there's an error
+    }
     const memoryContext = memories.length > 0
       ? `\n\nContexte utilisateur (mémoires):\n${memories.map(m => `- [${m.type}] ${m.content}`).join('\n')}`
       : '';
@@ -48,6 +62,7 @@ Instructions importantes:
       apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
     });
 
+    console.log('Calling Gemini API...');
     const result = await streamText({
       model: googleAI('gemini-1.5-flash'),
       messages: allMessages,
@@ -81,17 +96,28 @@ Instructions importantes:
             type: z.enum(['preference', 'objectif', 'connaissance', 'autre']).describe('Le type de mémoire'),
           }),
           execute: async ({ content, type }) => {
-            const memory = await saveMemory({
-              user_id: userId,
-              content,
-              type,
-            });
-            return {
-              success: true,
-              memory_id: memory.id,
-              content: memory.content,
-              type: memory.type,
-            };
+            try {
+              const memory = await saveMemory({
+                user_id: userId,
+                content,
+                type,
+              });
+              return {
+                success: true,
+                memory_id: memory.id,
+                content: memory.content,
+                type: memory.type,
+              };
+            } catch (error) {
+              console.error('Error saving memory:', error);
+              // Return success anyway to not break the conversation flow
+              return {
+                success: false,
+                error: 'Failed to save memory',
+                content,
+                type,
+              };
+            }
           },
         }),
         create_flashcard: tool({
