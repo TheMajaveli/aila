@@ -24,25 +24,25 @@ export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
 
   const isCorrect = selectedAnswer === quiz.correct_answer;
   const difficultyColors = {
-    easy: 'bg-green-100 text-green-800 border-green-300',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    hard: 'bg-red-100 text-red-800 border-red-300',
+    easy: 'bg-green-500/20 text-green-400 border-green-500/30',
+    medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    hard: 'bg-red-500/20 text-red-400 border-red-500/30',
   };
 
   return (
-    <div className="mt-3 p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="mt-3 p-5 bg-[#111111] rounded-xl border border-[#1f1f1f] shadow-lg backdrop-blur-xl">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#1f1f1f]">
         <div>
-          <h3 className="font-semibold text-base text-gray-900 dark:text-white mb-1">
+          <h3 className="font-semibold text-base text-white mb-1 tracking-tight">
             Quiz: {quiz.subject}
           </h3>
         </div>
-        <span className={`px-3 py-1 rounded-md text-xs font-medium ${difficultyColors[quiz.difficulty]} dark:border-0`}>
+        <span className={`px-3 py-1 rounded-lg text-xs font-medium ${difficultyColors[quiz.difficulty]}`}>
           {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
         </span>
       </div>
       
-      <p className="text-gray-800 dark:text-gray-200 mb-5 font-medium text-sm leading-relaxed">
+      <p className="text-gray-200 mb-5 font-light text-sm leading-relaxed">
         {quiz.question}
       </p>
       
@@ -52,14 +52,14 @@ export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
           
           if (showResult) {
             if (index === quiz.correct_answer) {
-              buttonClass += "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-300 dark:border-green-800 font-medium";
+              buttonClass += "bg-green-500/20 text-green-400 border-green-500/50 font-medium";
             } else if (index === selectedAnswer && index !== quiz.correct_answer) {
-              buttonClass += "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border-red-300 dark:border-red-800";
+              buttonClass += "bg-red-500/20 text-red-400 border-red-500/50";
             } else {
-              buttonClass += "bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600";
+              buttonClass += "bg-[#0a0a0a] text-gray-500 border-[#1f1f1f]";
             }
           } else {
-            buttonClass += "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer";
+            buttonClass += "bg-[#0a0a0a] text-gray-200 border-[#1f1f1f] hover:bg-[#111111] hover:border-blue-500/50 cursor-pointer transition-all";
           }
           
           return (
@@ -77,18 +77,18 @@ export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
       </div>
       
       {showResult && (
-        <div className={`mt-5 p-4 rounded-lg border ${
+        <div className={`mt-5 p-4 rounded-xl border ${
           isCorrect 
-            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            ? 'bg-green-500/10 border-green-500/30' 
+            : 'bg-red-500/10 border-red-500/30'
         }`}>
           <p className={`font-semibold mb-2 text-sm ${
-            isCorrect ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
+            isCorrect ? 'text-green-400' : 'text-red-400'
           }`}>
             {isCorrect ? 'Correct' : 'Incorrect'}
           </p>
           {quiz.explanation && (
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p className="text-sm text-gray-300 leading-relaxed font-light">
               {quiz.explanation}
             </p>
           )}

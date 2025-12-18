@@ -18,13 +18,13 @@ export function ChatMessage({ message, onQuizAnswer }: ChatMessageProps) {
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-5`}>
-      <div className={`max-w-[80%] rounded-lg px-4 py-3 ${
+      <div className={`${isUser ? 'max-w-[80%]' : 'w-3/4 max-w-[75%]'} rounded-xl px-4 py-3 ${
         isUser 
-          ? 'bg-blue-600 text-white shadow-sm' 
-          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 shadow-sm'
+          ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' 
+          : 'bg-[#111111] text-gray-100 border border-[#1f1f1f] shadow-sm backdrop-blur-xl'
       }`}>
         {message.content && (
-          <div className="whitespace-pre-wrap mb-2 text-sm leading-relaxed">{message.content}</div>
+          <div className="whitespace-pre-wrap mb-2 text-sm leading-relaxed font-light">{message.content}</div>
         )}
         
         {/* Render tool call results */}
