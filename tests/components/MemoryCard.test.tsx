@@ -23,10 +23,11 @@ describe('MemoryCard', () => {
     expect(screen.getByText(/Objectif/)).toBeInTheDocument();
   });
 
-  it('affiche l\'icône de sauvegarde', () => {
+  it('affiche le badge de type de mémoire', () => {
     render(<MemoryCard memory={mockMemory} />);
     
-    expect(screen.getByText('💾')).toBeInTheDocument();
+    expect(screen.getByText('Mémoire enregistrée')).toBeInTheDocument();
+    expect(screen.getByText('Objectif')).toBeInTheDocument();
   });
 
   it('affiche différents types de mémoire', () => {

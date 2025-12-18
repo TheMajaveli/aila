@@ -22,7 +22,7 @@ describe('QuizCard', () => {
   it('affiche la question et les options', () => {
     render(<QuizCard quiz={mockQuiz} />);
     
-    expect(screen.getByText('📚 Quiz: React')).toBeInTheDocument();
+    expect(screen.getByText('Quiz: React')).toBeInTheDocument();
     expect(screen.getByText('Qu\'est-ce que React?')).toBeInTheDocument();
     expect(screen.getByText('Une bibliothèque JavaScript')).toBeInTheDocument();
   });
@@ -49,7 +49,7 @@ describe('QuizCard', () => {
     const correctButton = screen.getByText('Une bibliothèque JavaScript');
     fireEvent.click(correctButton);
     
-    expect(screen.getByText('✅ Correct !')).toBeInTheDocument();
+    expect(screen.getByText('Correct')).toBeInTheDocument();
   });
 
   it('affiche le feedback incorrect pour la mauvaise réponse', () => {
@@ -58,7 +58,7 @@ describe('QuizCard', () => {
     const wrongButton = screen.getByText('Un framework backend');
     fireEvent.click(wrongButton);
     
-    expect(screen.getByText('❌ Incorrect')).toBeInTheDocument();
+    expect(screen.getByText('Incorrect')).toBeInTheDocument();
   });
 
   it('désactive les boutons après sélection', () => {

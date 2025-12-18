@@ -58,7 +58,7 @@ describe('ChatMessage', () => {
 
     render(<ChatMessage message={messageWithQuiz} />);
     
-    expect(screen.getByText('📚 Quiz: React')).toBeInTheDocument();
+    expect(screen.getByText('Quiz: React')).toBeInTheDocument();
   });
 });
 
