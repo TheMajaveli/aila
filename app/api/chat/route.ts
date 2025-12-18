@@ -64,7 +64,7 @@ Instructions importantes:
 
     console.log('Calling Gemini API...');
     const result = await streamText({
-      model: googleAI('gemini-1.5-flash'),
+      model: googleAI('gemini-1.5-pro'),
       messages: allMessages,
       tools: {
         generate_quiz: tool({
