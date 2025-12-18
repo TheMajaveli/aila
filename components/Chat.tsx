@@ -63,17 +63,18 @@ export function Chat() {
     }
   };
 
-  // Initialize conversation
+  // Initialize conversation - load from localStorage or create new
   useEffect(() => {
     const initConversation = async () => {
-      if (!conversationId) {
-        try {
-          const conv = await createConversation(userId);
-          setConversationId(conv.id);
-          
-          // Load existing messages if any
-          const existingMessages = await getMessages(conv.id);
+      try {
+        // Try to load conversationId from localStorage
+        const savedConversationId = localStorage.getItem(`conversationId_${userId}`);
+        
+        if (savedConversationId) {
+          // Load existing conversation
+          const existingMessages = await getMessages(savedConversationId);
           if (existingMessages.length > 0) {
+            setConversationId(savedConversationId);
             setMessages(existingMessages.map(msg => ({
               id: msg.id,
               role: msg.role,
@@ -86,10 +87,18 @@ export function Chat() {
                 state: 'result' as const,
               })),
             })) as any);
+            return;
           }
-        } catch (error) {
-          console.error('Error initializing conversation:', error);
         }
+        
+        // Create new conversation if none exists
+        if (!conversationId) {
+          const conv = await createConversation(userId);
+          setConversationId(conv.id);
+          localStorage.setItem(`conversationId_${userId}`, conv.id);
+        }
+      } catch (error) {
+        console.error('Error initializing conversation:', error);
       }
     };
     initConversation();
@@ -110,6 +119,7 @@ export function Chat() {
         const conv = await createConversation(userId);
         currentConversationId = conv.id;
         setConversationId(conv.id);
+        localStorage.setItem(`conversationId_${userId}`, conv.id);
       } catch (error) {
         console.error('Error creating conversation:', error);
         return;

@@ -36,13 +36,19 @@ export async function saveMessage(message: Omit<Message, 'id' | 'created_at'>) {
   const { data, error } = await client
     .from('messages')
     .insert({
-      ...message,
+      conversation_id: message.conversation_id,
+      role: message.role,
+      content: message.content,
+      tool_calls: message.tool_calls ? JSON.parse(JSON.stringify(message.tool_calls)) : null,
       created_at: new Date().toISOString(),
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error saving message:', error);
+    throw error;
+  }
   return data;
 }
 
@@ -54,8 +60,16 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true });
 
-  if (error) throw error;
-  return data || [];
+  if (error) {
+    console.error('Error fetching messages:', error);
+    throw error;
+  }
+  
+  // Ensure tool_calls are properly parsed from JSONB
+  return (data || []).map((msg: any) => ({
+    ...msg,
+    tool_calls: msg.tool_calls ? (typeof msg.tool_calls === 'string' ? JSON.parse(msg.tool_calls) : msg.tool_calls) : undefined,
+  }));
 }
 
 // Memories
