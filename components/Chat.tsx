@@ -20,7 +20,7 @@ export function Chat() {
   // Get authenticated user
   useEffect(() => {
     const initUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } }: { data: { session: any } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
         setUserId(session.user.id);

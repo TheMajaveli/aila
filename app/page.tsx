@@ -28,7 +28,7 @@ export default function Home() {
   }, []);
 
   const handleAuthSuccess = () => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
       setUser(session?.user ?? null);
     });
   };
