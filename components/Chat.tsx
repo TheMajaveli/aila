@@ -12,7 +12,7 @@ export function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userId = getUserId();
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } = useChat({
     api: '/api/chat',
     body: {
       conversationId,
@@ -36,6 +36,30 @@ export function Chat() {
       }
     },
   });
+
+  const handleQuizAnswer = async (quizId: string, selectedIndex: number, isCorrect: boolean, quiz: any) => {
+    if (!conversationId) return;
+    
+    const selectedOption = quiz.options[selectedIndex];
+    const answerMessage = `J'ai répondu "${selectedOption}" ${isCorrect ? '(correct)' : '(incorrect)'} au quiz sur ${quiz.subject}.`;
+    
+    // Save user answer to conversation
+    try {
+      await saveMessage({
+        conversation_id: conversationId,
+        role: 'user',
+        content: answerMessage,
+      });
+      
+      // Send answer to AI for feedback
+      await append({
+        role: 'user',
+        content: answerMessage,
+      });
+    } catch (error) {
+      console.error('Error saving quiz answer:', error);
+    }
+  };
 
   // Initialize conversation
   useEffect(() => {
@@ -148,6 +172,7 @@ export function Chat() {
               })),
               created_at: new Date().toISOString(),
             }}
+            onQuizAnswer={handleQuizAnswer}
           />
         ))}
         
