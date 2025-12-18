@@ -12,32 +12,31 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@ai-sdk/google": "^0.0.50",
+    "@ai-sdk/openai": "^0.0.50",
+    "@supabase/supabase-js": "^2.39.0",
+    "ai": "^3.0.0",
     "next": "^15.0.0",
+    "openai": "^4.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@supabase/supabase-js": "^2.39.0",
-    "openai": "^4.20.0",
-    "ai": "^3.0.0",
-    "@ai-sdk/openai": "^0.0.50",
-    "@ai-sdk/google": "^0.0.50",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.0",
+    "@testing-library/react": "^15.0.0",
+    "@testing-library/user-event": "^14.5.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8",
+    "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^8",
     "eslint-config-next": "^15.0.0",
-    "vitest": "^1.0.0",
-    "@testing-library/react": "^15.0.0",
-    "@testing-library/jest-dom": "^6.1.0",
-    "@testing-library/user-event": "^14.5.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "jsdom": "^23.0.0"
+    "jsdom": "^23.0.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5",
+    "vitest": "^1.0.0"
   }
 }
-
