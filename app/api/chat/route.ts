@@ -1,12 +1,7 @@
-import { openai } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getMemories, saveMemory } from '@/lib/db';
-
-// Initialize OpenAI with API key
-const openaiClient = openai({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +10,13 @@ export async function POST(req: Request) {
     if (!userId) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), {
         status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
+        status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
     }
@@ -42,8 +44,12 @@ Instructions importantes:
     const userMessages = messages.filter((m: any) => m.role !== 'system');
     const allMessages = [systemMessage, ...userMessages];
 
+    const googleAI = createGoogleGenerativeAI({
+      apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+    });
+
     const result = await streamText({
-      model: openaiClient('gpt-4-turbo-preview'),
+      model: googleAI('gemini-1.5-flash'),
       messages: allMessages,
       tools: {
         generate_quiz: tool({

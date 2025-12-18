@@ -7,9 +7,10 @@ import { FlashcardCard } from './FlashcardCard';
 
 interface ChatMessageProps {
   message: Message;
+  onQuizAnswer?: (quizId: string, selectedIndex: number, isCorrect: boolean, quiz: any) => void;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, onQuizAnswer }: ChatMessageProps) {
   const isUser = message.role === 'user';
 
   // Check if message contains tool calls
@@ -33,6 +34,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
               <QuizCard
                 key={toolCall.id}
                 quiz={toolCall.result}
+                onAnswer={(quizId, selectedIndex, isCorrect) => {
+                  if (onQuizAnswer) {
+                    onQuizAnswer(quizId, selectedIndex, isCorrect, toolCall.result);
+                  }
+                }}
               />
             );
           }

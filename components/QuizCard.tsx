@@ -5,9 +5,10 @@ import type { Quiz } from '@/lib/db.types';
 
 interface QuizCardProps {
   quiz: Quiz;
+  onAnswer?: (quizId: string, selectedIndex: number, isCorrect: boolean) => void;
 }
 
-export function QuizCard({ quiz }: QuizCardProps) {
+export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
@@ -15,6 +16,10 @@ export function QuizCard({ quiz }: QuizCardProps) {
     if (showResult) return;
     setSelectedAnswer(index);
     setShowResult(true);
+    const isCorrect = index === quiz.correct_answer;
+    if (onAnswer) {
+      onAnswer(quiz.id, index, isCorrect);
+    }
   };
 
   const isCorrect = selectedAnswer === quiz.correct_answer;
