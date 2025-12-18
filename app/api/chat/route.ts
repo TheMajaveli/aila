@@ -117,7 +117,21 @@ Instructions importantes:
     return result.toDataStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    // Log more details for debugging
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      hasApiKey: !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    });
+    
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

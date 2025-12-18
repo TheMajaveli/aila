@@ -1,6 +1,16 @@
 import { supabase, createServerClient } from './supabase';
 import type { Message, Memory, Conversation, Quiz } from './db.types';
 
+// Use server client for API routes
+const getSupabaseClient = () => {
+  if (typeof window === 'undefined') {
+    // Server-side: use service role client
+    return createServerClient();
+  }
+  // Client-side: use anon client
+  return supabase;
+};
+
 // Get or create a user ID (for POC, we'll use a simple localStorage-based approach)
 export function getUserId(): string {
   if (typeof window === 'undefined') return 'default-user';
@@ -14,7 +24,8 @@ export function getUserId(): string {
 
 // Messages
 export async function saveMessage(message: Omit<Message, 'id' | 'created_at'>) {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('messages')
     .insert({
       ...message,
@@ -28,7 +39,8 @@ export async function saveMessage(message: Omit<Message, 'id' | 'created_at'>) {
 }
 
 export async function getMessages(conversationId: string): Promise<Message[]> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('messages')
     .select('*')
     .eq('conversation_id', conversationId)
@@ -40,7 +52,8 @@ export async function getMessages(conversationId: string): Promise<Message[]> {
 
 // Memories
 export async function saveMemory(memory: Omit<Memory, 'id' | 'created_at'>) {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('memories')
     .insert({
       ...memory,
@@ -54,7 +67,8 @@ export async function saveMemory(memory: Omit<Memory, 'id' | 'created_at'>) {
 }
 
 export async function getMemories(userId: string): Promise<Memory[]> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('memories')
     .select('*')
     .eq('user_id', userId)
@@ -66,7 +80,8 @@ export async function getMemories(userId: string): Promise<Memory[]> {
 
 // Conversations
 export async function createConversation(userId: string): Promise<Conversation> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('conversations')
     .insert({
       user_id: userId,
@@ -81,7 +96,8 @@ export async function createConversation(userId: string): Promise<Conversation> 
 }
 
 export async function getConversations(userId: string): Promise<Conversation[]> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('conversations')
     .select('*')
     .eq('user_id', userId)
@@ -92,7 +108,8 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
 }
 
 export async function getConversation(conversationId: string): Promise<Conversation | null> {
-  const { data, error } = await supabase
+  const client = getSupabaseClient();
+  const { data, error } = await client
     .from('conversations')
     .select('*')
     .eq('id', conversationId)
@@ -106,7 +123,8 @@ export async function getConversation(conversationId: string): Promise<Conversat
 }
 
 export async function updateConversation(conversationId: string) {
-  const { error } = await supabase
+  const client = getSupabaseClient();
+  const { error } = await client
     .from('conversations')
     .update({ updated_at: new Date().toISOString() })
     .eq('id', conversationId);
