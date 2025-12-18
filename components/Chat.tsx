@@ -25,7 +25,9 @@ export function Chat() {
           conversation_id: conversationId,
           role: 'assistant',
           content: message.content,
-          tool_calls: message.toolInvocations?.map(tool => ({
+          tool_calls: message.toolInvocations?.filter((tool): tool is typeof tool & { state: 'result' } => 
+            'state' in tool && tool.state === 'result'
+          ).map(tool => ({
             id: tool.toolCallId,
             name: tool.toolName,
             arguments: tool.args,
@@ -81,8 +83,9 @@ export function Chat() {
                 toolName: tc.name,
                 args: tc.arguments,
                 result: tc.result,
+                state: 'result' as const,
               })),
-            })));
+            })) as any);
           }
         } catch (error) {
           console.error('Error initializing conversation:', error);
@@ -135,7 +138,7 @@ export function Chat() {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          🤖 Assistant d'Apprentissage
+          🤖 Assistant d&apos;Apprentissage
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Posez vos questions, demandez des quiz ou créez des cartes mémoire
@@ -147,29 +150,37 @@ export function Chat() {
         {messages.length === 0 && (
           <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <p className="text-lg mb-2">👋 Bonjour !</p>
-            <p>Je suis votre assistant d'apprentissage. Essayez de me demander :</p>
+            <p>Je suis votre assistant d&apos;apprentissage. Essayez de me demander :</p>
             <ul className="mt-4 space-y-2 text-left max-w-md mx-auto">
-              <li>• "Fais-moi un quiz sur React"</li>
-              <li>• "Je prépare un concours et j'ai du mal avec les probabilités"</li>
-              <li>• "Crée une carte mémoire pour la formule E=mc²"</li>
+              <li>• &quot;Fais-moi un quiz sur React&quot;</li>
+              <li>• &quot;Je prépare un concours et j&apos;ai du mal avec les probabilités&quot;</li>
+              <li>• &quot;Crée une carte mémoire pour la formule E=mc²&quot;</li>
             </ul>
           </div>
         )}
         
-        {messages.map((message) => (
+        {messages
+          .filter((msg): msg is typeof msg & { role: 'user' | 'assistant' | 'system' } => 
+            msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system'
+          )
+          .map((message) => (
           <ChatMessage
             key={message.id}
             message={{
               id: message.id,
               conversation_id: conversationId || '',
-              role: message.role,
+              role: message.role as 'user' | 'assistant' | 'system',
               content: message.content,
-              tool_calls: message.toolInvocations?.map(tool => ({
-                id: tool.toolCallId,
-                name: tool.toolName,
-                arguments: tool.args,
-                result: tool.result,
-              })),
+              tool_calls: message.toolInvocations
+                ?.filter((tool): tool is typeof tool & { state: 'result' } => 
+                  'state' in tool && tool.state === 'result'
+                )
+                .map(tool => ({
+                  id: tool.toolCallId,
+                  name: tool.toolName,
+                  arguments: tool.args,
+                  result: tool.result,
+                })),
               created_at: new Date().toISOString(),
             }}
             onQuizAnswer={handleQuizAnswer}

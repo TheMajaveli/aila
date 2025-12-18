@@ -40,7 +40,7 @@ export function MemoryCard({ memory }: MemoryCardProps) {
         </span>
       </div>
       <p className="text-sm opacity-90 italic">
-        "{memory.content}"
+        &quot;{memory.content}&quot;
       </p>
     </div>
   );
