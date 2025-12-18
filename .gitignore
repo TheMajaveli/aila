@@ -38,10 +38,6 @@ next-env.d.ts
 
 # Documentation interne (ne pas pousser)
 scripts/
-COMMITS.md
-QUICKSTART.md
-PRESENTATION.md
-RESUME.md
-SETUP_GIT.md
-TECHNICAL_SUMMARY.md
+*.md
+!README.md
 
