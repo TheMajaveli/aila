@@ -37,6 +37,14 @@ yarn-error.log*
 next-env.d.ts
 
 # Documentation interne (ne pas pousser)
+*.md
+!README.md
+
+# Scripts shell (ne pas pousser)
+*.sh
+scripts/
+
+# Documentation interne (ne pas pousser)
 scripts/
 *.md
 !README.md
