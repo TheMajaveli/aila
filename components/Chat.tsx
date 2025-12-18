@@ -136,11 +136,11 @@ export function Chat() {
   return (
     <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-          🤖 Assistant d&apos;Apprentissage
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 shadow-sm">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
+          Assistant d&apos;Apprentissage
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Posez vos questions, demandez des quiz ou créez des cartes mémoire
         </p>
       </div>
@@ -148,14 +148,27 @@ export function Chat() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-            <p className="text-lg mb-2">👋 Bonjour !</p>
-            <p>Je suis votre assistant d&apos;apprentissage. Essayez de me demander :</p>
-            <ul className="mt-4 space-y-2 text-left max-w-md mx-auto">
-              <li>• &quot;Fais-moi un quiz sur React&quot;</li>
-              <li>• &quot;Je prépare un concours et j&apos;ai du mal avec les probabilités&quot;</li>
-              <li>• &quot;Crée une carte mémoire pour la formule E=mc²&quot;</li>
-            </ul>
+          <div className="text-center text-gray-600 dark:text-gray-300 mt-12 max-w-2xl mx-auto">
+            <h2 className="text-xl font-medium mb-3 text-gray-900 dark:text-white">
+              Bienvenue
+            </h2>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">
+              Je suis votre assistant d&apos;apprentissage. Voici quelques exemples de ce que vous pouvez me demander :
+            </p>
+            <div className="space-y-3 text-left bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-500 font-semibold mt-0.5">•</span>
+                <span className="text-gray-700 dark:text-gray-300">&quot;Fais-moi un quiz sur React&quot;</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-500 font-semibold mt-0.5">•</span>
+                <span className="text-gray-700 dark:text-gray-300">&quot;Je prépare un concours et j&apos;ai du mal avec les probabilités&quot;</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-blue-500 font-semibold mt-0.5">•</span>
+                <span className="text-gray-700 dark:text-gray-300">&quot;Crée une carte mémoire pour la formule E=mc²&quot;</span>
+              </div>
+            </div>
           </div>
         )}
         
@@ -203,19 +216,19 @@ export function Chat() {
       </div>
 
       {/* Input */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-4">
-        <form onSubmit={onSubmit} className="flex gap-2">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4 shadow-sm">
+        <form onSubmit={onSubmit} className="flex gap-3">
           <input
             value={input}
             onChange={handleInputChange}
             placeholder="Tapez votre message..."
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm shadow-sm"
           >
             {isLoading ? 'Envoi...' : 'Envoyer'}
           </button>

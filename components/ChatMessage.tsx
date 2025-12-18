@@ -17,14 +17,14 @@ export function ChatMessage({ message, onQuizAnswer }: ChatMessageProps) {
   const toolCalls = message.tool_calls || [];
   
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`max-w-[80%] rounded-lg px-4 py-2 ${
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-5`}>
+      <div className={`max-w-[80%] rounded-lg px-4 py-3 ${
         isUser 
-          ? 'bg-blue-500 text-white' 
-          : 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white'
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 shadow-sm'
       }`}>
         {message.content && (
-          <div className="whitespace-pre-wrap mb-2">{message.content}</div>
+          <div className="whitespace-pre-wrap mb-2 text-sm leading-relaxed">{message.content}</div>
         )}
         
         {/* Render tool call results */}

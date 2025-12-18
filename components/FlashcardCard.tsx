@@ -16,8 +16,8 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
 
   return (
     <div className="mt-3">
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-        📇 Carte mémoire • {flashcard.category}
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium uppercase tracking-wide">
+        Carte mémoire • {flashcard.category}
       </div>
       <div
         onClick={() => setIsFlipped(!isFlipped)}
@@ -33,18 +33,18 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
         >
           {/* Front */}
           <div
-            className="absolute inset-0 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-6 flex items-center justify-center"
+            className="absolute inset-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex items-center justify-center shadow-md"
             style={{ 
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
           >
-            <div className="text-center">
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Question</div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="text-center w-full">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide font-medium">Question</div>
+              <p className="text-base font-medium text-gray-900 dark:text-white leading-relaxed">
                 {flashcard.front}
               </p>
-              <div className="mt-4 text-xs text-gray-400 dark:text-gray-500">
+              <div className="mt-5 text-xs text-gray-400 dark:text-gray-500">
                 Cliquez pour retourner
               </div>
             </div>
@@ -52,19 +52,19 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
           
           {/* Back */}
           <div
-            className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-lg p-6 flex items-center justify-center"
+            className="absolute inset-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 flex items-center justify-center shadow-md"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
             }}
           >
-            <div className="text-center">
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Réponse</div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="text-center w-full">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wide font-medium">Réponse</div>
+              <p className="text-base font-medium text-gray-900 dark:text-white leading-relaxed">
                 {flashcard.back}
               </p>
-              <div className="mt-4 text-xs text-gray-400 dark:text-gray-500">
+              <div className="mt-5 text-xs text-gray-400 dark:text-gray-500">
                 Cliquez pour retourner
               </div>
             </div>

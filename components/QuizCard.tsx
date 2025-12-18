@@ -30,34 +30,36 @@ export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
   };
 
   return (
-    <div className="mt-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-lg">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
-          📚 Quiz: {quiz.subject}
-        </h3>
-        <span className={`px-2 py-1 rounded text-xs font-medium border ${difficultyColors[quiz.difficulty]}`}>
+    <div className="mt-3 p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <div>
+          <h3 className="font-semibold text-base text-gray-900 dark:text-white mb-1">
+            Quiz: {quiz.subject}
+          </h3>
+        </div>
+        <span className={`px-3 py-1 rounded-md text-xs font-medium ${difficultyColors[quiz.difficulty]} dark:border-0`}>
           {quiz.difficulty === 'easy' ? 'Facile' : quiz.difficulty === 'medium' ? 'Moyen' : 'Difficile'}
         </span>
       </div>
       
-      <p className="text-gray-800 dark:text-gray-200 mb-4 font-medium">
+      <p className="text-gray-800 dark:text-gray-200 mb-5 font-medium text-sm leading-relaxed">
         {quiz.question}
       </p>
       
       <div className="space-y-2">
         {quiz.options.map((option, index) => {
-          let buttonClass = "w-full text-left p-3 rounded-lg border-2 transition-all ";
+          let buttonClass = "w-full text-left p-3.5 rounded-lg border transition-all text-sm ";
           
           if (showResult) {
             if (index === quiz.correct_answer) {
-              buttonClass += "bg-green-500 text-white border-green-600 font-semibold";
+              buttonClass += "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border-green-300 dark:border-green-800 font-medium";
             } else if (index === selectedAnswer && index !== quiz.correct_answer) {
-              buttonClass += "bg-red-500 text-white border-red-600";
+              buttonClass += "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border-red-300 dark:border-red-800";
             } else {
-              buttonClass += "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600";
+              buttonClass += "bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600";
             }
           } else {
-            buttonClass += "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 hover:border-blue-400 cursor-pointer";
+            buttonClass += "bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-600 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer";
           }
           
           return (
@@ -75,18 +77,18 @@ export function QuizCard({ quiz, onAnswer }: QuizCardProps) {
       </div>
       
       {showResult && (
-        <div className={`mt-4 p-3 rounded-lg ${
+        <div className={`mt-5 p-4 rounded-lg border ${
           isCorrect 
-            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-            : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
         }`}>
-          <p className={`font-semibold mb-1 ${
+          <p className={`font-semibold mb-2 text-sm ${
             isCorrect ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'
           }`}>
-            {isCorrect ? '✅ Correct !' : '❌ Incorrect'}
+            {isCorrect ? 'Correct' : 'Incorrect'}
           </p>
           {quiz.explanation && (
-            <p className="text-sm text-gray-700 dark:text-gray-300">
+            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
               {quiz.explanation}
             </p>
           )}

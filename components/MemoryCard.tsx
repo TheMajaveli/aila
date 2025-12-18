@@ -16,12 +16,7 @@ const typeLabels = {
   autre: 'Autre',
 };
 
-const typeIcons = {
-  preference: '⭐',
-  objectif: '🎯',
-  connaissance: '🧠',
-  autre: '📝',
-};
+// Removed icons for cleaner UI
 
 const typeColors = {
   preference: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/20 dark:text-purple-200 dark:border-purple-800',
@@ -32,15 +27,17 @@ const typeColors = {
 
 export function MemoryCard({ memory }: MemoryCardProps) {
   return (
-    <div className={`mt-3 p-3 rounded-lg border-2 ${typeColors[memory.type]} shadow-sm`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xl">💾</span>
-        <span className="font-semibold text-sm">
-          Mémoire enregistrée ({typeIcons[memory.type]} {typeLabels[memory.type]})
+    <div className={`mt-3 p-4 rounded-lg border ${typeColors[memory.type]} shadow-sm`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-sm uppercase tracking-wide">
+          Mémoire enregistrée
+        </span>
+        <span className="text-xs font-medium px-2 py-1 rounded bg-white/50 dark:bg-gray-800/50">
+          {typeLabels[memory.type]}
         </span>
       </div>
-      <p className="text-sm opacity-90 italic">
-        &quot;{memory.content}&quot;
+      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        {memory.content}
       </p>
     </div>
   );
