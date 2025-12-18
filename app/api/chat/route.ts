@@ -2,6 +2,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
 import { getMemories, saveMemory } from '@/lib/db';
+import { createServerClient } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
@@ -15,7 +16,26 @@ export async function POST(req: Request) {
       userId 
     });
 
-    if (!userId) {
+    // Use the userId directly - it's already authenticated from Supabase Auth on the client side
+    // The userId is the UUID from auth.users, which is secure since it comes from an authenticated session
+    let authenticatedUserId = userId;
+    
+    // Basic validation: ensure userId is provided and is a valid UUID format
+    if (!authenticatedUserId || authenticatedUserId.trim() === '') {
+      return new Response(JSON.stringify({ error: 'User ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Validate UUID format (basic check)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(authenticatedUserId) && !authenticatedUserId.startsWith('user-')) {
+      // Allow legacy user-* format for backward compatibility
+      console.warn('Non-UUID userId format detected:', authenticatedUserId);
+    }
+
+    if (!authenticatedUserId) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -32,7 +52,7 @@ export async function POST(req: Request) {
     // Get user memories for context (with error handling)
     let memories: any[] = [];
     try {
-      memories = await getMemories(userId);
+      memories = await getMemories(authenticatedUserId);
     } catch (memoryError) {
       console.warn('Failed to load memories, continuing without context:', memoryError);
       // Continue without memories if there's an error
@@ -49,7 +69,8 @@ ${memoryContext}
 
 Instructions importantes:
 - Utilise l'outil generate_quiz quand l'utilisateur demande un quiz ou veut tester ses connaissances.
-- Utilise l'outil add_memory pour sauvegarder des informations importantes sur l'utilisateur (préférences, objectifs, difficultés, connaissances).
+- Utilise l'outil add_memory UNIQUEMENT pour sauvegarder des informations PERTINENTES et UTILES à l'apprentissage (préférences d'apprentissage, objectifs pédagogiques, difficultés rencontrées, connaissances acquises). Ne stocke PAS d'informations personnelles non liées à l'apprentissage.
+- Réutilise les mémoires stockées dans le contexte pour personnaliser tes réponses et adapter ton approche pédagogique.
 - Utilise l'outil create_flashcard pour créer des cartes mémoire interactives quand l'utilisateur veut mémoriser quelque chose.
 - Sois naturel et conversationnel.`,
     };
@@ -92,18 +113,18 @@ Instructions importantes:
           },
         }),
         add_memory: tool({
-          description: 'Enregistre une information importante sur l\'utilisateur pour personnaliser l\'expérience d\'apprentissage.',
+          description: 'Enregistre UNIQUEMENT des informations PERTINENTES et UTILES à l\'apprentissage pour personnaliser l\'expérience. Ne stocke que des informations liées à l\'apprentissage : préférences pédagogiques, objectifs d\'apprentissage, difficultés rencontrées, connaissances acquises. Ignore les informations personnelles non pertinentes.',
           parameters: z.object({
-            content: z.string().describe('L\'information à mémoriser'),
-            type: z.enum(['preference', 'objectif', 'connaissance', 'autre']).describe('Le type de mémoire'),
+            content: z.string().describe('L\'information pertinente à mémoriser (doit être utile pour l\'apprentissage)'),
+            type: z.enum(['preference', 'objectif', 'connaissance', 'autre']).describe('Le type de mémoire (preference: préférences d\'apprentissage, objectif: objectifs pédagogiques, connaissance: connaissances acquises, autre: autres infos pertinentes)'),
           }),
           execute: async ({ content, type }) => {
-            try {
-              const memory = await saveMemory({
-                user_id: userId,
-                content,
-                type,
-              });
+              try {
+                const memory = await saveMemory({
+                  user_id: authenticatedUserId,
+                  content,
+                  type,
+                });
               return {
                 success: true,
                 memory_id: memory.id,

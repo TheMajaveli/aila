@@ -3,20 +3,51 @@
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from 'ai/react';
 import { ChatMessage } from './ChatMessage';
-import { getUserId, createConversation, saveMessage, getMessages, updateConversation } from '@/lib/db';
+import { getUserId, createConversation, saveMessage, getMessages, updateConversation, getConversations } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/db.types';
+import type { User } from '@supabase/supabase-js';
 
 export function Chat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const userId = getUserId();
+
+  // Get authenticated user
+  useEffect(() => {
+    const initUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setUserId(session.user.id);
+      }
+    };
+    initUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+      if (session?.user) {
+        setUser(session.user);
+        setUserId(session.user.id);
+      } else {
+        setUser(null);
+        setUserId(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } = useChat({
     api: '/api/chat',
     body: {
       conversationId,
-      userId,
+      userId: userId || '',
     },
     onFinish: async (message) => {
       // Save assistant message
@@ -63,8 +94,24 @@ export function Chat() {
     }
   };
 
+  // Load conversations list
+  useEffect(() => {
+    if (!userId) return;
+    const loadConversations = async () => {
+      try {
+        const convs = await getConversations(userId);
+        setConversations(convs);
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      }
+    };
+    loadConversations();
+  }, [userId, conversationId]);
+
   // Initialize conversation - load from localStorage or create new
   useEffect(() => {
+    if (!userId) return;
+    
     const initConversation = async () => {
       try {
         // Try to load conversationId from localStorage
@@ -92,7 +139,7 @@ export function Chat() {
         }
         
         // Create new conversation if none exists
-        if (!conversationId) {
+        if (!conversationId && userId) {
           const conv = await createConversation(userId);
           setConversationId(conv.id);
           localStorage.setItem(`conversationId_${userId}`, conv.id);
@@ -103,7 +150,61 @@ export function Chat() {
     };
     initConversation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userId]);
+
+  // Load a specific conversation
+  const loadConversation = async (convId: string) => {
+    if (!userId) return;
+    try {
+      setIsLoadingConversation(true);
+      const existingMessages = await getMessages(convId);
+      setConversationId(convId);
+      localStorage.setItem(`conversationId_${userId}`, convId);
+      setMessages(existingMessages.map(msg => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        toolInvocations: msg.tool_calls?.map(tc => ({
+          toolCallId: tc.id,
+          toolName: tc.name,
+          args: tc.arguments,
+          result: tc.result,
+          state: 'result' as const,
+        })),
+      })) as any);
+      setShowConversationList(false);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
+
+  // Create new conversation
+  const createNewConversation = async () => {
+    if (!userId) return;
+    try {
+      const conv = await createConversation(userId);
+      setConversationId(conv.id);
+      localStorage.setItem(`conversationId_${userId}`, conv.id);
+      setMessages([]);
+      setShowConversationList(false);
+      // Reload conversations list
+      const convs = await getConversations(userId);
+      setConversations(convs);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+
+  // Logout
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setUserId(null);
+    setConversationId(null);
+    setMessages([]);
+  };
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -112,6 +213,11 @@ export function Chat() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!userId) {
+      console.error('User not authenticated');
+      return;
+    }
     
     let currentConversationId = conversationId;
     if (!currentConversationId) {
@@ -143,16 +249,89 @@ export function Chat() {
     handleSubmit(e);
   };
 
+  // Show loading state if user is not yet loaded
+  if (!userId) {
+    return (
+      <div className="flex flex-col h-screen bg-[#0a0a0a] items-center justify-center">
+        <div className="text-gray-400">Chargement de votre session...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-[#0a0a0a]">
       {/* Header */}
       <div className="bg-[#111111] border-b border-[#1f1f1f] px-6 py-5 backdrop-blur-xl">
-        <h1 className="text-2xl font-semibold text-white mb-1.5 tracking-tight">
-          Assistant d&apos;Apprentissage
-        </h1>
-        <p className="text-sm text-gray-400 font-light">
-          Posez vos questions, demandez des quiz ou créez des cartes mémoire
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-white mb-1.5 tracking-tight">
+              Assistant d&apos;Apprentissage
+            </h1>
+            <p className="text-sm text-gray-400 font-light">
+              Posez vos questions, demandez des quiz ou créez des cartes mémoire
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowConversationList(!showConversationList)}
+              className="px-4 py-2 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl text-sm text-gray-300 hover:bg-[#1a1a1a] transition-all"
+            >
+              {showConversationList ? 'Masquer' : 'Conversations'}
+            </button>
+            {user && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-400">{user.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl text-sm text-gray-300 hover:bg-[#1a1a1a] transition-all"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Conversation List */}
+        {showConversationList && (
+          <div className="mt-4 p-4 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl max-h-64 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-white">Conversations précédentes</h3>
+              <button
+                onClick={createNewConversation}
+                className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-all"
+              >
+                Nouvelle
+              </button>
+            </div>
+            {conversations.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Aucune conversation</p>
+            ) : (
+              <div className="space-y-2">
+                {conversations.map((conv) => (
+                  <button
+                    key={conv.id}
+                    onClick={() => loadConversation(conv.id)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
+                      conv.id === conversationId
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-[#111111] text-gray-300 border border-[#1f1f1f] hover:bg-[#1a1a1a]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="truncate">
+                        {conv.title || `Conversation du ${new Date(conv.created_at).toLocaleDateString('fr-FR')}`}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        {new Date(conv.updated_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Messages */}

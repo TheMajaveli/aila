@@ -44,11 +44,11 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
           {/* Front Side */}
           <div
             className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-[#1f1f1f] p-8 flex items-center justify-center shadow-2xl backdrop-blur-xl"
-            style={{ 
+            style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              boxShadow: isHovered 
-                ? '0 20px 40px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.1)' 
+              boxShadow: isHovered
+                ? '0 20px 40px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.1)'
                 : '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
             }}
           >
@@ -69,7 +69,7 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Back Side */}
           <div
             className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#111111] via-[#0f0f0f] to-[#111111] border border-[#1f1f1f] p-8 flex items-center justify-center shadow-2xl backdrop-blur-xl"
@@ -77,8 +77,8 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               transform: 'rotateY(180deg)',
-              boxShadow: isHovered 
-                ? '0 20px 40px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.1)' 
+              boxShadow: isHovered
+                ? '0 20px 40px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.1)'
                 : '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
             }}
           >
@@ -113,4 +113,3 @@ export function FlashcardCard({ flashcard }: FlashcardCardProps) {
     </div>
   );
 }
-
