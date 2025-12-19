@@ -70,7 +70,8 @@ ${memoryContext}
 Instructions importantes:
 - Utilise l'outil generate_quiz quand l'utilisateur demande un quiz ou veut tester ses connaissances.
 - Utilise l'outil add_memory UNIQUEMENT pour sauvegarder des informations PERTINENTES et UTILES à l'apprentissage (préférences d'apprentissage, objectifs pédagogiques, difficultés rencontrées, connaissances acquises). Ne stocke PAS d'informations personnelles non liées à l'apprentissage.
-- Réutilise les mémoires stockées dans le contexte pour personnaliser tes réponses et adapter ton approche pédagogique.
+- IMPORTANT : Quand tu utilises add_memory, tu DOIS confirmer explicitement l'action dans ta réponse textuelle. Par exemple : "Ok, je m'en souviendrai !" ou "Parfait, j'ai enregistré cette information pour te personnaliser l'expérience." La carte UI s'affichera automatiquement, mais ta confirmation verbale est essentielle.
+- Réutilise les mémoires stockées dans le contexte pour personnaliser tes réponses et adapter ton approche pédagogique dans les conversations futures.
 - Utilise l'outil create_flashcard pour créer des cartes mémoire interactives quand l'utilisateur veut mémoriser quelque chose.
 - Sois naturel et conversationnel.`,
     };

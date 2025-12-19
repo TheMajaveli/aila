@@ -32,6 +32,11 @@ yarn-error.log*
 # Supabase SQL scripts (database setup files)
 supabase-*.sql
 
+# Presentation documentation (local only)
+PRESENTATION.md
+TEST_GUIDE.md
+QUICK_TEST_PROMPTS.md
+
 # vercel
 .vercel
 
@@ -46,9 +51,4 @@ next-env.d.ts
 # Scripts shell (ne pas pousser)
 *.sh
 scripts/
-
-# Documentation interne (ne pas pousser)
-scripts/
-*.md
-!README.md
 
