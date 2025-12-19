@@ -20,17 +20,43 @@ export function Chat() {
   // Get authenticated user
   useEffect(() => {
     const initUser = async () => {
-      const { data: { session } }: { data: { session: any } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        setUserId(session.user.id);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          // If token is invalid, sign out
+          if (error.message?.includes('refresh') || error.message?.includes('token')) {
+            await supabase.auth.signOut();
+          }
+          setUser(null);
+          setUserId(null);
+        } else if (session?.user) {
+          setUser(session.user);
+          setUserId(session.user.id);
+        } else {
+          setUser(null);
+          setUserId(null);
+        }
+      } catch (error) {
+        console.error('Error in initUser:', error);
+        setUser(null);
+        setUserId(null);
       }
     };
     initUser();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: string, session: any) => {
+    } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
+      // Handle token refresh errors
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        // Token refresh failed, sign out
+        await supabase.auth.signOut();
+        setUser(null);
+        setUserId(null);
+        return;
+      }
+      
       if (session?.user) {
         setUser(session.user);
         setUserId(session.user.id);
@@ -50,22 +76,52 @@ export function Chat() {
       userId: userId || '',
     },
     onFinish: async (message) => {
-      // Save assistant message
+      // Save assistant message with tool calls
       if (conversationId) {
-        await saveMessage({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: message.content,
-          tool_calls: message.toolInvocations?.filter((tool): tool is typeof tool & { state: 'result' } => 
-            'state' in tool && tool.state === 'result'
-          ).map(tool => ({
-            id: tool.toolCallId,
-            name: tool.toolName,
-            arguments: tool.args,
-            result: tool.result,
-          })),
-        });
-        await updateConversation(conversationId);
+        try {
+          // Extract tool calls that have results
+          const toolCalls = message.toolInvocations
+            ?.filter((tool): tool is typeof tool & { state: 'result' } => 
+              'state' in tool && tool.state === 'result'
+            )
+            .map(tool => ({
+              id: tool.toolCallId || `tool-${Date.now()}-${Math.random()}`,
+              name: tool.toolName,
+              arguments: tool.args || {},
+              result: tool.result,
+            })) || [];
+
+          // Always save the message if it has content OR tool calls
+          // This ensures quizzes, memories, and flashcards are persisted even without text
+          if (message.content || toolCalls.length > 0) {
+            await saveMessage({
+              conversation_id: conversationId,
+              role: 'assistant',
+              content: message.content || '', // Allow empty content if tool calls exist
+              tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+            });
+            
+            console.log('✅ Saved assistant message with tool calls:', {
+              messageId: message.id,
+              hasContent: !!message.content,
+              contentLength: message.content?.length || 0,
+              toolCallsCount: toolCalls.length,
+              toolCalls: toolCalls.map(tc => ({
+                name: tc.name,
+                hasResult: !!tc.result,
+                resultKeys: tc.result ? Object.keys(tc.result) : [],
+              })),
+            });
+            
+            await updateConversation(conversationId);
+          } else {
+            console.warn('⚠️ Skipping message save: no content and no tool calls', {
+              messageId: message.id,
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error saving assistant message:', error);
+        }
       }
     },
   });
@@ -122,18 +178,42 @@ export function Chat() {
           const existingMessages = await getMessages(savedConversationId);
           if (existingMessages.length > 0) {
             setConversationId(savedConversationId);
-            setMessages(existingMessages.map(msg => ({
-              id: msg.id,
-              role: msg.role,
-              content: msg.content,
-              toolInvocations: msg.tool_calls?.map(tc => ({
-                toolCallId: tc.id,
-                toolName: tc.name,
-                args: tc.arguments,
-                result: tc.result,
-                state: 'result' as const,
-              })),
-            })) as any);
+            const restoredMessages = existingMessages.map(msg => {
+              // Convert tool_calls from database format to useChat format
+              const toolInvocations = msg.tool_calls && Array.isArray(msg.tool_calls)
+                ? msg.tool_calls.map((tc: any) => ({
+                    toolCallId: tc.id || `tool-${Date.now()}-${Math.random()}`,
+                    toolName: tc.name,
+                    args: tc.arguments || {},
+                    result: tc.result,
+                    state: 'result' as const,
+                  }))
+                : [];
+              
+              console.log('Restored message:', {
+                id: msg.id,
+                role: msg.role,
+                hasToolCalls: !!msg.tool_calls,
+                toolCallsCount: msg.tool_calls?.length || 0,
+                toolInvocationsCount: toolInvocations.length,
+              });
+              
+              return {
+                id: msg.id,
+                role: msg.role,
+                content: msg.content || '',
+                toolInvocations: toolInvocations.length > 0 ? toolInvocations : undefined,
+                // Also keep tool_calls for direct access
+                tool_calls: msg.tool_calls,
+              };
+            });
+            
+            console.log('Loaded conversation with messages:', {
+              messageCount: restoredMessages.length,
+              messagesWithToolCalls: restoredMessages.filter(m => m.toolInvocations && m.toolInvocations.length > 0).length,
+            });
+            
+            setMessages(restoredMessages as any);
             return;
           }
         }
@@ -160,18 +240,44 @@ export function Chat() {
       const existingMessages = await getMessages(convId);
       setConversationId(convId);
       localStorage.setItem(`conversationId_${userId}`, convId);
-      setMessages(existingMessages.map(msg => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        toolInvocations: msg.tool_calls?.map(tc => ({
-          toolCallId: tc.id,
-          toolName: tc.name,
-          args: tc.arguments,
-          result: tc.result,
-          state: 'result' as const,
-        })),
-      })) as any);
+      
+      const restoredMessages = existingMessages.map(msg => {
+        // Convert tool_calls from database format to useChat format
+        const toolInvocations = msg.tool_calls && Array.isArray(msg.tool_calls)
+          ? msg.tool_calls.map((tc: any) => ({
+              toolCallId: tc.id || `tool-${Date.now()}-${Math.random()}`,
+              toolName: tc.name,
+              args: tc.arguments || {},
+              result: tc.result,
+              state: 'result' as const,
+            }))
+          : [];
+        
+        console.log('Restored message in loadConversation:', {
+          id: msg.id,
+          role: msg.role,
+          hasToolCalls: !!msg.tool_calls,
+          toolCallsCount: msg.tool_calls?.length || 0,
+          toolInvocationsCount: toolInvocations.length,
+        });
+        
+        return {
+          id: msg.id,
+          role: msg.role,
+          content: msg.content || '',
+          toolInvocations: toolInvocations.length > 0 ? toolInvocations : undefined,
+          // Also keep tool_calls for direct access
+          tool_calls: msg.tool_calls,
+        };
+      });
+      
+      console.log('Loaded conversation:', {
+        conversationId: convId,
+        messageCount: restoredMessages.length,
+        messagesWithToolCalls: restoredMessages.filter(m => m.toolInvocations && m.toolInvocations.length > 0).length,
+      });
+      
+      setMessages(restoredMessages as any);
       setShowConversationList(false);
     } catch (error) {
       console.error('Error loading conversation:', error);
@@ -365,16 +471,15 @@ export function Chat() {
           .filter((msg): msg is typeof msg & { role: 'user' | 'assistant' | 'system' } => 
             msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system'
           )
-          .map((message) => (
-          <ChatMessage
-            key={message.id}
-            message={{
-              id: message.id,
-              conversation_id: conversationId || '',
-              role: message.role as 'user' | 'assistant' | 'system',
-              content: message.content,
-              tool_calls: message.toolInvocations
-                ?.filter((tool): tool is typeof tool & { state: 'result' } => 
+          .map((message) => {
+            // Convert toolInvocations to tool_calls format for ChatMessage
+            // Handle both formats: toolInvocations (from useChat) and direct tool_calls (from DB)
+            let toolCalls: any[] = [];
+            
+            if (message.toolInvocations && Array.isArray(message.toolInvocations)) {
+              // Format from useChat hook
+              toolCalls = message.toolInvocations
+                .filter((tool): tool is typeof tool & { state: 'result' } => 
                   'state' in tool && tool.state === 'result'
                 )
                 .map(tool => ({
@@ -382,12 +487,27 @@ export function Chat() {
                   name: tool.toolName,
                   arguments: tool.args,
                   result: tool.result,
-                })),
-              created_at: new Date().toISOString(),
-            }}
-            onQuizAnswer={handleQuizAnswer}
-          />
-        ))}
+                }));
+            } else if ((message as any).tool_calls && Array.isArray((message as any).tool_calls)) {
+              // Format from database (already in correct format)
+              toolCalls = (message as any).tool_calls;
+            }
+            
+            return (
+              <ChatMessage
+                key={message.id}
+                message={{
+                  id: message.id,
+                  conversation_id: conversationId || '',
+                  role: message.role as 'user' | 'assistant' | 'system',
+                  content: message.content || '',
+                  tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+                  created_at: (message as any).created_at || new Date().toISOString(),
+                }}
+                onQuizAnswer={handleQuizAnswer}
+              />
+            );
+          })}
         
         {isLoading && (
           <div className="flex justify-start">

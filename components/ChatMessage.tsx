@@ -27,8 +27,10 @@ export function ChatMessage({ message, onQuizAnswer }: ChatMessageProps) {
           <div className="whitespace-pre-wrap mb-2 text-sm leading-relaxed font-light">{message.content}</div>
         )}
         
-        {/* Render tool call results */}
-        {toolCalls.map((toolCall) => {
+        {/* Render tool call results - show even if no content */}
+        {toolCalls.length > 0 && (
+          <div className={message.content ? 'mt-3' : ''}>
+            {toolCalls.map((toolCall) => {
           if (toolCall.name === 'generate_quiz' && toolCall.result) {
             return (
               <QuizCard
@@ -59,7 +61,9 @@ export function ChatMessage({ message, onQuizAnswer }: ChatMessageProps) {
             );
           }
           return null;
-        })}
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

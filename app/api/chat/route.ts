@@ -120,28 +120,51 @@ Instructions importantes:
           }),
           execute: async ({ content, type }) => {
               try {
+                console.log('🔄 Attempting to save memory:', {
+                  userId: authenticatedUserId,
+                  type,
+                  content: content.substring(0, 50) + '...',
+                });
+                
                 const memory = await saveMemory({
                   user_id: authenticatedUserId,
                   content,
                   type,
                 });
-              return {
-                success: true,
-                memory_id: memory.id,
-                content: memory.content,
-                type: memory.type,
-              };
-            } catch (error) {
-              console.error('Error saving memory:', error);
-              // Return success anyway to not break the conversation flow
-              return {
-                success: false,
-                error: 'Failed to save memory',
-                content,
-                type,
-              };
-            }
-          },
+                
+                console.log('✅ Memory saved successfully in tool:', {
+                  memoryId: memory.id,
+                  type: memory.type,
+                });
+                
+                return {
+                  success: true,
+                  memory_id: memory.id,
+                  content: memory.content,
+                  type: memory.type,
+                };
+              } catch (error: any) {
+                console.error('❌ Error saving memory in tool:', {
+                  error: error.message,
+                  code: error.code,
+                  details: error.details,
+                  hint: error.hint,
+                  userId: authenticatedUserId,
+                  type,
+                  content: content.substring(0, 50) + '...',
+                });
+                
+                // Still return a result to not break the conversation flow
+                // but indicate failure
+                return {
+                  success: false,
+                  error: error.message || 'Failed to save memory',
+                  error_code: error.code,
+                  content,
+                  type,
+                };
+              }
+            },
         }),
         create_flashcard: tool({
           description: 'Crée une carte mémoire interactive pour aider l\'utilisateur à mémoriser des informations.',
