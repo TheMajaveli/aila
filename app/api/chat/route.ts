@@ -69,10 +69,22 @@ ${memoryContext}
 
 Instructions importantes:
 - Utilise l'outil generate_quiz quand l'utilisateur demande un quiz ou veut tester ses connaissances.
-- Utilise l'outil add_memory UNIQUEMENT pour sauvegarder des informations PERTINENTES et UTILES à l'apprentissage (préférences d'apprentissage, objectifs pédagogiques, difficultés rencontrées, connaissances acquises). Ne stocke PAS d'informations personnelles non liées à l'apprentissage.
-- IMPORTANT : Quand tu utilises add_memory, tu DOIS confirmer explicitement l'action dans ta réponse textuelle. Par exemple : "Ok, je m'en souviendrai !" ou "Parfait, j'ai enregistré cette information pour te personnaliser l'expérience." La carte UI s'affichera automatiquement, mais ta confirmation verbale est essentielle.
-- Réutilise les mémoires stockées dans le contexte pour personnaliser tes réponses et adapter ton approche pédagogique dans les conversations futures.
+
+- Utilise l'outil add_memory OBLIGATOIREMENT dans ces cas :
+  * Quand l'utilisateur mentionne un objectif d'apprentissage (ex: "Je prépare un concours", "Je veux apprendre X", "Mon objectif est...")
+  * Quand l'utilisateur mentionne une difficulté (ex: "J'ai du mal avec X", "Je bloque sur X")
+  * Quand l'utilisateur mentionne une préférence d'apprentissage (ex: "Je préfère apprendre avec...", "J'apprends mieux...")
+  * Quand l'utilisateur mentionne une connaissance acquise (ex: "J'ai compris X", "Je maîtrise X")
+  * Quand l'utilisateur demande explicitement de se souvenir (ex: "Souviens-toi que...", "Mémorise...")
+  
+  IMPORTANT : Dès que tu détectes une de ces situations, appelle IMMÉDIATEMENT add_memory AVANT de répondre. Ne pose pas de questions d'abord, sauvegarde d'abord l'information.
+
+- Quand tu utilises add_memory, tu DOIS confirmer explicitement dans ta réponse textuelle : "Ok, je m'en souviendrai !" ou "Parfait, j'ai enregistré cette information." La carte UI s'affichera automatiquement.
+
+- Réutilise TOUJOURS les mémoires du contexte pour personnaliser tes réponses. Si une mémoire existe sur un sujet, mentionne-la dans ta réponse.
+
 - Utilise l'outil create_flashcard pour créer des cartes mémoire interactives quand l'utilisateur veut mémoriser quelque chose.
+
 - Sois naturel et conversationnel.`,
     };
 
@@ -114,7 +126,7 @@ Instructions importantes:
           },
         }),
         add_memory: tool({
-          description: 'Enregistre UNIQUEMENT des informations PERTINENTES et UTILES à l\'apprentissage pour personnaliser l\'expérience. Ne stocke que des informations liées à l\'apprentissage : préférences pédagogiques, objectifs d\'apprentissage, difficultés rencontrées, connaissances acquises. Ignore les informations personnelles non pertinentes.',
+          description: 'OBLIGATOIRE : Enregistre des informations pertinentes pour l\'apprentissage. Utilise cet outil dès que l\'utilisateur mentionne : un objectif (ex: "Je prépare un concours", "Je veux apprendre X"), une difficulté (ex: "J\'ai du mal avec X"), une préférence (ex: "Je préfère apprendre avec..."), une connaissance (ex: "J\'ai compris X"), ou demande explicitement de se souvenir. Ne stocke QUE des informations liées à l\'apprentissage.',
           parameters: z.object({
             content: z.string().describe('L\'information pertinente à mémoriser (doit être utile pour l\'apprentissage)'),
             type: z.enum(['preference', 'objectif', 'connaissance', 'autre']).describe('Le type de mémoire (preference: préférences d\'apprentissage, objectif: objectifs pédagogiques, connaissance: connaissances acquises, autre: autres infos pertinentes)'),
