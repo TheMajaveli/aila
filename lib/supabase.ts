@@ -8,8 +8,40 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        // Handle token refresh errors gracefully
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      },
+    })
   : null as any; // Will throw error if used without env vars
+
+// Helper function to safely get session with error handling
+export async function getSessionSafely() {
+  if (!supabase) return { session: null, error: null };
+  
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    // If token refresh error, sign out
+    if (error && (error.message?.includes('refresh') || error.message?.includes('token') || error.message?.includes('Invalid Refresh Token'))) {
+      console.warn('Token refresh error detected, signing out:', error.message);
+      await supabase.auth.signOut();
+      return { session: null, error: null };
+    }
+    
+    return { session: data.session, error };
+  } catch (err: any) {
+    console.error('Error getting session:', err);
+    if (err?.message?.includes('refresh') || err?.message?.includes('token')) {
+      await supabase.auth.signOut().catch(console.error);
+    }
+    return { session: null, error: err };
+  }
+}
 
 // Server-side client with service role key
 export function createServerClient() {

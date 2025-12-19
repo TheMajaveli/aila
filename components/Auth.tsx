@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface AuthProps {
@@ -13,11 +13,26 @@ export function Auth({ onAuthSuccess }: AuthProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Check for error in URL params (from callback)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const errorParam = params.get('error');
+      if (errorParam === 'email_confirmation_failed') {
+        setError('La confirmation de l\'email a échoué. Veuillez réessayer.');
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       if (isLogin) {
@@ -28,6 +43,14 @@ export function Auth({ onAuthSuccess }: AuthProps) {
         });
 
         if (error) throw error;
+        
+        // Check if email is confirmed
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setError('Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception.');
+          return;
+        }
+        
         if (data.user) {
           onAuthSuccess();
         }
@@ -36,11 +59,27 @@ export function Auth({ onAuthSuccess }: AuthProps) {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
         });
 
         if (error) throw error;
+        
         if (data.user) {
-          onAuthSuccess();
+          // Check if email confirmation is required
+          if (!data.user.email_confirmed_at) {
+            // Sign out the user immediately after registration
+            await supabase.auth.signOut();
+            setSuccessMessage('Un email de confirmation a été envoyé à votre adresse. Veuillez vérifier votre boîte de réception et cliquer sur le lien pour confirmer votre compte.');
+            // Reset form
+            setEmail('');
+            setPassword('');
+            setIsLogin(true);
+          } else {
+            // Email already confirmed (shouldn't happen in production with email confirmation enabled)
+            onAuthSuccess();
+          }
         }
       }
     } catch (err: any) {
@@ -101,12 +140,18 @@ export function Auth({ onAuthSuccess }: AuthProps) {
               </div>
             )}
 
+            {successMessage && (
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <p className="text-sm text-green-400">{successMessage}</p>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
               className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium shadow-lg shadow-blue-500/20"
             >
-              {loading ? 'Chargement...' : isLogin ? 'Se connecter' : 'S&apos;inscrire'}
+              {loading ? 'Chargement...' : isLogin ? 'Se connecter' : 'S\'inscrire'}
             </button>
           </form>
 
